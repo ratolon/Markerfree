@@ -73,4 +73,3 @@
   -a TS_01.rawtlt \
   -d -1 \
   -x TS_01_align.txt
-

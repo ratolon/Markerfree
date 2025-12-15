@@ -86,6 +86,3 @@ The following example demonstrates alignment using projection matching with a th
 ```bash
 ./Markerfree -i /data/BBb.st -o /data/alignresult.mrc -a /data/BBb.rawtlt -g 0,0,0,0,300,1,0 -p 10 -s 0
 ```
-
-
-
