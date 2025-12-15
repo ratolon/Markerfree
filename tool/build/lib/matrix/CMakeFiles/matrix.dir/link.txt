@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../libmatrix.a CMakeFiles/matrix.dir/fmatrix.c.o CMakeFiles/matrix.dir/matrix.c.o CMakeFiles/matrix.dir/qsort.c.o CMakeFiles/matrix.dir/svd.c.o CMakeFiles/matrix.dir/triangulate.c.o CMakeFiles/matrix.dir/util.c.o CMakeFiles/matrix.dir/vector.c.o
-/usr/bin/ranlib ../libmatrix.a

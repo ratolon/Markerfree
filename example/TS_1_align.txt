@@ -44,4 +44,4 @@
    40     94.6802      9.296     -5.049      39.98
 angleoffset: 5.000000
 Output Bin: 1
-Elapsed time: 33.240086 seconds
+Elapsed time: 45.851048 seconds

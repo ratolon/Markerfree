@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../libsba.a CMakeFiles/sba.dir/sba_levmar.c.o CMakeFiles/sba.dir/sba_levmar_wrap.c.o CMakeFiles/sba.dir/sba_lapack.c.o CMakeFiles/sba.dir/sba_crsm.c.o CMakeFiles/sba.dir/sba_chkjac.c.o
-/usr/bin/ranlib ../libsba.a

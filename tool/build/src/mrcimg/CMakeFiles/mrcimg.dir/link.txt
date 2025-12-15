@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/libmrcimg.a CMakeFiles/mrcimg.dir/mrc2img.cpp.o
-/usr/bin/ranlib ../../lib/libmrcimg.a

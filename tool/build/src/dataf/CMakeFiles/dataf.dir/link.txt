@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/libdataf.a CMakeFiles/dataf.dir/camera.cpp.o CMakeFiles/dataf.dir/dataf.cpp.o CMakeFiles/dataf.dir/quat_vec.cpp.o
-/usr/bin/ranlib ../../lib/libdataf.a
