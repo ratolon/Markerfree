@@ -1,7 +1,5 @@
+cmake_minimum_required(VERSION 3.18)
 project(markerauto-pb)
-
-cmake_minimum_required(VERSION 2.6)
-
 
 #the store of data in clapack or cblas is column main sequence
 
