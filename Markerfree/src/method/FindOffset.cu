@@ -92,7 +92,7 @@ void FindOffset::DoIt(MrcStackM &preprojs, AlignParam* pAlignParam, std::vector<
     printf("Determine tilt angle offset.\n");
     param->angleOffset += SearchOffset(31, 1.0f, 0.0f);
 //     param->angleOffset = 0;
-    printf("旋转轴偏移角为: %f\n", param->angleOffset);
+    printf("旋转轴偏移角为 - Tilt axis angle offset is: %f\n", param->angleOffset);
 }
 
 void FindOffset::FOsetup()
