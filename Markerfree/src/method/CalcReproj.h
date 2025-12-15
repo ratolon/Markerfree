@@ -7,7 +7,7 @@
 #include "../mrc/mrcstack.h"
 
 struct Coeff
-{ // 20个双精度数，前10个是a后10个是b
+{ // 20个双精度数，前10个是a后10个是b // 20 double precision numbers, the first 10 are a and the last 10 are b
 	union
 	{
 		double p[20];

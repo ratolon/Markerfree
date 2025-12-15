@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 class MrcStackM
-{ // Mrc文件调用类
+{ // Mrc文件调用类 - Mrc file calling class
 public:
     MRCheader header;
     MPI_File mpifile;
@@ -118,7 +118,7 @@ inline void AssignValue(Point2D &pt2, int _x, int _y)
 }
 
 struct Point3DF
-{ // 三维点坐标
+{ // 三维点坐标 - 3D point coordinates
     float x, y, z;
 };
 
@@ -156,7 +156,7 @@ public:
         };
     };
 
-    int height; //长    y
+    int height; //长        y
     int width;  //宽		x
     int thickness; //高		z
 
@@ -267,9 +267,9 @@ struct Weight
 
 struct Geometry
 {
-    float zshift;          //表示z轴偏移 
-    float pitch_angle;    //表示倾斜轴偏移角
-    float offset;         //表示倾斜角偏移
+    float zshift;          //表示z轴偏移  - z-axis offset
+    float pitch_angle;    //表示倾斜轴偏移角 - tilt axis offset angle
+    float offset;         //表示倾斜角偏移 - tilt angle offset
 };
 
 #endif

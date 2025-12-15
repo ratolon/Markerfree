@@ -30,7 +30,7 @@ struct options
     int GPU;
 
     int Savemode;
-    int nProj; // <--- 新增
+    int nProj; // <--- 新增 - New
 
     // method
     std::string method;

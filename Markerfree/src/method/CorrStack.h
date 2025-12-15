@@ -28,7 +28,7 @@ public:
 	  bool bInPadded,
 	  int* piOutSize,
 	  bool bOutPadded
-	//   int iNumPatches  //这个参数与局部对齐有关
+	//   int iNumPatches  //这个参数与局部对齐有关 - This parameter is related to local alignment
 	);
 	void DoIt
 	( float* gfInImg,
@@ -118,10 +118,10 @@ private:
 	int m_aiBinnedSize[3];
 	float m_afBinning[2];
 
-    float* m_gfRawProj; //一张初始图像，内存分配无pad
-	float* m_gfCorrProj; //一张纠正的图像，内存分配有pad
-	float* m_gfBinProj; //一张纠正后经过尺寸缩小处理的图像，内存分配有pad
-	float* m_gfCorrectProjs;  //最后的纠正图像结果，全部图像，内存分类无pad
+    float* m_gfRawProj; //一张初始图像，内存分配无pad - An initial image, memory allocated without pad
+	float* m_gfCorrProj; //一张纠正的图像，内存分配有pad - A corrected image, memory allocated with pad
+	float* m_gfBinProj; //一张纠正后经过尺寸缩小处理的图像，内存分配有pad - A corrected and downsampled image, memory allocated with pad
+	float* m_gfCorrectProjs;  //最后的纠正图像结果，全部图像，内存分类无pad - The final corrected image result, all images, memory allocated without pad
 
 	float m_fOutBin;
     bool m_onlyshift;

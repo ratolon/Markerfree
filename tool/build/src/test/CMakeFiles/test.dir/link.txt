@@ -1,1 +1,0 @@
-/usr/bin/c++ -rdynamic -Wl,--dependency-file,CMakeFiles/test.dir/link.d CMakeFiles/test.dir/test.cpp.o -o ../../bin/test   -L/home/xzh/文档/markerauto/mar_are/tool/build/lib 

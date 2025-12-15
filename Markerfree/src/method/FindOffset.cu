@@ -26,7 +26,7 @@ __global__ void GConv2D(float* proj1, float* proj2, int width, int height, float
 		}
 	}
     for(int i=0; i<6; i++)
-	{	shared[threadIdx.x + i * blockDim.x] = afTemp[i];  //blockDim.x，x线程的数量
+	{	shared[threadIdx.x + i * blockDim.x] = afTemp[i];  //blockDim.x，x线程的数量 - number of x threads
 	}
 	__syncthreads();
 
@@ -41,7 +41,7 @@ __global__ void GConv2D(float* proj1, float* proj2, int width, int height, float
 	}
     if(threadIdx.x == 0)
 	{	for(int i=0; i<6; i++)
-		{buf[6 * blockIdx.x + i] = shared[i * blockDim.x];   //将每个block的和放入gfres
+		{buf[6 * blockIdx.x + i] = shared[i * blockDim.x];   //将每个block的和放入gfres - Put the sum of each block into gfres
 		}
 	}
 }
@@ -92,7 +92,7 @@ void FindOffset::DoIt(MrcStackM &preprojs, AlignParam* pAlignParam, std::vector<
     printf("Determine tilt angle offset.\n");
     param->angleOffset += SearchOffset(31, 1.0f, 0.0f);
 //     param->angleOffset = 0;
-    printf("旋转轴偏移角为: %f\n", param->angleOffset);
+    printf("旋转轴偏移角为 - Tilt axis angle offset is: %f\n", param->angleOffset);
 }
 
 void FindOffset::FOsetup()
@@ -204,7 +204,7 @@ float FindOffset::Correlate(int iRefProj, int iProj)
 
     // float MaskCent[] = {BinSize[0] * 0.5f, BinSize[1] * 0.5f};
     // float MaskSize[] = {BinSize[0] * 1.0f, BinSize[1] * 1.0f};
-    // stetch.RoundEdge(d_refproj, BinSize, !bPadded, 4, MaskCent, MaskSize);   //对两张图像运用圆形蒙版
+    // stetch.RoundEdge(d_refproj, BinSize, !bPadded, 4, MaskCent, MaskSize);   //对两张图像运用圆形蒙版 - Apply circular mask to both images
     // stetch.RoundEdge(d_proj, BinSize, !bPadded, 4, MaskCent, MaskSize);
 
     dim3 aBlockDim(128, 1);
@@ -219,14 +219,14 @@ float FindOffset::Correlate(int iRefProj, int iProj)
 	cudaMemcpy(afVals, databuf, sizeof(afVals), cudaMemcpyDefault);
 
     for(int i=0; i<5; i++) afVals[i] /= afVals[5];
-	double dStd1 = afVals[2] - afVals[0];  //img1的方差
-	double dStd2 = afVals[3] - afVals[1];  //img2的方差
-	double dCC = afVals[4] - afVals[0] * afVals[1];  //计算归一化互相关
+	double dStd1 = afVals[2] - afVals[0];  //img1的方差 - Variance of img1
+	double dStd2 = afVals[3] - afVals[1];  //img2的方差 - Variance of img2
+	double dCC = afVals[4] - afVals[0] * afVals[1];  //计算归一化互相关 - Calculate normalized cross-correlation
 	if(dStd1 < 0) dStd1 = 0;
 	if(dStd2 < 0) dStd2 = 0;
-	dStd1 = sqrt(dStd1);  //求出标准差
+	dStd1 = sqrt(dStd1);  //求出标准差 - Get the standard deviation
 	dStd2 = sqrt(dStd2);
-	dCC = dCC / (dStd1 * dStd2 + 1e-30);  //计算归一化互相关
+	dCC = dCC / (dStd1 * dStd2 + 1e-30);  //计算归一化互相关 - Calculate normalized cross-correlation
 	if(dCC < -1) dCC = -1;
 	else if(dCC > 1) dCC = 1;	
 

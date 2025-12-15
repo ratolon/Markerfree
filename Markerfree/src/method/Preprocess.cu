@@ -130,6 +130,7 @@ void PreProcess::SetPositive(void)
     }
     printf("StackMin:%f\n", fStackMin);
     if(fStackMin >= 0)  //如果所有图的最小值大于0，则不用进行额外操作，否则需要进行调整保证所有值为正
+    // If the minimum value of all images is greater than 0, no additional operation is required, otherwise adjustment is needed to ensure all values are positive
 	{	cudaFree(d_proj);
         delete[] h_proj;
 		printf("Positivity set.\n\n");
@@ -162,12 +163,12 @@ void PreProcess::MassNormalization()
 
     float* pfMean = new float[nz];
     for(int i=0; i<nz; i++)
-	{	pfMean[i] = mCalcMean(i);	//得到每张图像非0处的平均像素值
+	{	pfMean[i] = mCalcMean(i);	//得到每张图像非0处的平均像素值 - Get the average pixel value of each image at non-0 locations
 	}
-    int iZeroTilt = GetFrameIdxFromTilt(stack->Z(), angles, 0.0f);  //选定最接近零倾斜角度的那张图片
+    int iZeroTilt = GetFrameIdxFromTilt(stack->Z(), angles, 0.0f);  //选定最接近零倾斜角度的那张图片 - Select the image closest to zero tilt angle
 	float RefMean = pfMean[iZeroTilt];
-	if(RefMean > 1000.0f) RefMean = 1000.0f; //如果参考平均值超过1000，则定为1000
-	for(int i=0; i<nz; i++) //通过平均值得到的比例，将所有图像的像素值乘比例
+	if(RefMean > 1000.0f) RefMean = 1000.0f; //如果参考平均值超过1000，则定为1000 - If the reference average value exceeds 1000, it is set to 1000
+	for(int i=0; i<nz; i++) //通过平均值得到的比例，将所有图像的像素值乘比例 - Multiply the pixel values of all images by the ratio obtained from the average value
 	{	float fScale = RefMean / (pfMean[i] + 0.00001f);
 		mScale(i, fScale);
 	}
@@ -212,7 +213,7 @@ float PreProcess::FindMinAndMax(float *proj, int width, int height, MAXIN maxin)
 // 	return iFrameIdx;
 // }
 
-float PreProcess::mCalcMean(int iFrame)  //计算第iframe张图像的非0处的像素值的平均值
+float PreProcess::mCalcMean(int iFrame)  //计算第iframe张图像的非0处的像素值的平均值 - Calculate the average pixel value of the iframe-th image at non-0 locations
 {
 	double dMean = 0.0;
 	int iCount = 0;

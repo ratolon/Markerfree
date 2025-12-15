@@ -10,6 +10,7 @@ __global__ void GCalcCommonRegion(int width, int height, int LineSize, float* gR
                                     float shiftX, float shiftY, int* ComRegion)
 {
     int y = blockIdx.y * blockDim.y + threadIdx.y;   //blockIdx.x表示第几个尝试的角度，y表示公共线上的第几个点
+	// blockIdx.x indicates the number of attempted angles, y indicates the number of points on the common line
 	if(y >= LineSize) return;
 	int i = blockIdx.x * LineSize + y;
 
@@ -20,8 +21,9 @@ __global__ void GCalcCommonRegion(int width, int height, int LineSize, float* gR
     int half = LineSize / 2;
     float fOffsetX = width * 0.5f + shiftX;
 	float fOffsetY = height * 0.5f + shiftY;
-	float fY = y - LineSize * 0.5f;  //当前的y相对于中心的偏移
-    for(int x=1; x<half; x++)   //假设旋转图像了，公共线和x轴垂直了，然后以width/2，LineSize/2为中心
+	float fY = y - LineSize * 0.5f;  //当前的y相对于中心的偏移 - The current y offset relative to the center
+    for(int x=1; x<half; x++)   //假设旋转图像了，公共线和x轴垂直了，然后以width/2，LineSize/2为中心 - 
+	// Assuming the image is rotated, the common line is perpendicular to the x-axis, and then centered at width/2, LineSize/2
 	{	float fOldX = -x * fcos - fY * fsin + fOffsetX;
 		float fOldY = -x * fsin + fY * fcos + fOffsetY;
 		if(fOldX < 0 || fOldX >= width) break;
@@ -41,7 +43,8 @@ __global__ void GRadon(float* proj, int width, int height, float* gRotAngles, fl
                         float shiftX, float shiftY, int* ComRegion, int LineSize, float* PadLines)
 {
     int x, y, i;
-	y = blockIdx.y * blockDim.y + threadIdx.y;  //表示一条line上的第几个值，也就是旋转后的y轴坐标
+	y = blockIdx.y * blockDim.y + threadIdx.y;  //表示一条line上的第几个值，也就是旋转后的y轴坐标 -
+	// indicates the number of values on a line, which is the y-axis coordinate after rotation
 	if(y >= LineSize) return;
 	//-------------------------
 	float fCosRot = gRotAngles[blockIdx.x] * 3.1415926f / 180.0f;
@@ -52,17 +55,18 @@ __global__ void GRadon(float* proj, int width, int height, float* gRotAngles, fl
 	float fSum = 0.0f;
 	int iCount = 0;
 
-    i = blockIdx.x * LineSize + y;         //blockIdx.x表示第几条线
+    i = blockIdx.x * LineSize + y;         //blockIdx.x表示第几条线 - blockIdx.x indicates which line
     float fOffsetX = width * 0.5f + shiftX;
 	float fOffsetY = height * 0.5f + shiftY;
-    int iLeftWidth = (int)(ComRegion[2 * i] * fcos + 0.5f);  //根据图像投影角度将共同区域进行裁剪
+    int iLeftWidth = (int)(ComRegion[2 * i] * fcos + 0.5f);  //根据图像投影角度将共同区域进行裁剪 -
+	// According to the image projection angle, the common area is cropped
     for(x=iLeftWidth; x<0; x++)
 	{	float fOldX = x * fCosRot - fY * fSinRot + fOffsetX;
 		float fOldY = x * fSinRot + fY * fCosRot + fOffsetY;
 		if(fOldX < 0 || fOldX >= width) continue;
 		if(fOldY < 0 || fOldY >= height) continue;
 		//----------------------------------------------
-		fOldX = proj[((int)fOldY) * width + (int)fOldX];  //此处没有使用插值
+		fOldX = proj[((int)fOldY) * width + (int)fOldX];  //此处没有使用插值 - No interpolation is used here
 		// fOldX = mGBilinear(fOldX, fOldY, width, height, proj);
 		if(fOldX < 0) continue;
 		//---------------------
@@ -76,7 +80,7 @@ __global__ void GRadon(float* proj, int width, int height, float* gRotAngles, fl
 		if(fOldX < 0 || fOldX >= width) continue;
 		if(fOldY < 0 || fOldY >= height) continue;
 		//----------------------------------------------
-		fOldX = proj[((int)fOldY) * width + (int)fOldX];  //此处没有使用插值
+		fOldX = proj[((int)fOldY) * width + (int)fOldX];  //此处没有使用插值 - No interpolation is used here
 		// fOldX = mGBilinear(fOldX, fOldY, width, height, proj);
 		if(fOldX < 0) continue;
 		//---------------------
@@ -84,12 +88,13 @@ __global__ void GRadon(float* proj, int width, int height, float* gRotAngles, fl
 		iCount++;
 	}
 	//------------
-	y = blockIdx.x * (LineSize / 2 + 1) * 2 + y;  //用于傅里叶变换的数组，正好可以存储两倍大小的浮点数
+	y = blockIdx.x * (LineSize / 2 + 1) * 2 + y;  //用于傅里叶变换的数组，正好可以存储两倍大小的浮点数 -
+	// Used for Fourier transform arrays, which can store twice the size of floating point numbers
 	if(iCount == 0) PadLines[y] = (float)-1e30;
-	else PadLines[y] = fSum / iCount;  //要除以像素数量
+	else PadLines[y] = fSum / iCount;  //要除以像素数量 - Must be divided by the number of pixels
 }
 
-__global__ void GCalcMean(float* gfPadLine, int iSize)    //重新写的
+__global__ void GCalcMean(float* gfPadLine, int iSize)    //重新写的 Mean calculation - rewritten kernel
 {
 	__shared__ float sfSum[512];
 	__shared__ int siCount[512];
@@ -135,15 +140,16 @@ __global__ void GCalcMean(float* gfPadLine, int iSize)    //重新写的
 	}
 }
 
+// Inspired in AreTomo2
 __global__ void GRemoveMean(float* gfPadLine, int iSize)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i >= iSize) return;
 	//if(gfPadLine[i] < (float)-1e10) gfPadLine[i] = 0;
 	if(gfPadLine[i] < 0) gfPadLine[i] = 0.0f;
-	else gfPadLine[i] -= gfPadLine[iSize+1];  //每个数都减去均值
+	else gfPadLine[i] -= gfPadLine[iSize+1];  //每个数都减去均值 - Each number minus the mean
 	//--------------------------------------
-	float fHalf = 0.5f * iSize;            //滤波，提取相对中间的部分
+	float fHalf = 0.5f * iSize;            //滤波，提取相对中间的部分 - Filtering, extracting the part relative to the middle
 	float fR = fabsf(i - fHalf) / fHalf;
 	fR = 0.5f * (1 - cosf(3.14159 * fR));
 	fR = 1.0f - powf(fR, 100.0f);
@@ -182,7 +188,7 @@ __global__ void GConv(cufftComplex* gComp1, cufftComplex* gComp2, int iCmpSize,
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < iCmpSize && i != 0)
 	{	float fFilt = i / (2.0f * (iCmpSize - 1));
-		fFilt = expf(-2.0f * fBFactor * fFilt * fFilt);  //高斯滤波处理
+		fFilt = expf(-2.0f * fBFactor * fFilt * fFilt);  //高斯滤波处理 - Gaussian filtering
 		//---------------------------------------------
 		float fA1, fA2;
 		fA1 = gComp1[i].x * gComp1[i].x + gComp1[i].y * gComp1[i].y;
@@ -280,7 +286,7 @@ void CalcTIltAxis::Setup(MrcStackM &preprojs, AlignParam* pAlignParam, std::vect
 {
     stack = &preprojs;
     param = pAlignParam;
-    angles = p_angles;  //最后看看这里还需要设置什么，要是设置的不多的话直接塞doit中去
+    angles = p_angles;  //最后看看这里还需要设置什么，要是设置的不多的话直接塞doit中去 - Finally, see what else needs to be set here, if not much, just put it in doit
 }
 
 void CalcTIltAxis::DoIt(MrcStackM &preprojs, AlignParam* pAlignParam, std::vector<float> p_angles, float angRange, int num)
@@ -290,9 +296,10 @@ void CalcTIltAxis::DoIt(MrcStackM &preprojs, AlignParam* pAlignParam, std::vecto
     angles = p_angles;
     CLsetup(angRange, num);
 
-    int iBytes = sizeof(int) * NumLines * LineSize * 2;  //ComRegion 是一个 2D 数组,只记录一个图像的数据，在fft之后存储在CmpPlanes中
+    int iBytes = sizeof(int) * NumLines * LineSize * 2;  //ComRegion 是一个 2D 数组,只记录一个图像的数据，在fft之后存储在CmpPlanes中 -
+	// ComRegion is a 2D array that only records the data of one image, after fft it is stored in CmpPlanes
     cudaMalloc(&ComRegion, iBytes);
-    size_t tBytes = sizeof(cufftComplex) * NumLines * CmpLineSize;  //存储一张图像的所有投影fft数据
+    size_t tBytes = sizeof(cufftComplex) * NumLines * CmpLineSize;  //存储一张图像的所有投影fft数据 - storing all projection fft data of one image
     cudaMalloc(&CmpPlane, tBytes);
 
     m_fft.CreateForwardPlan(LineSize);
@@ -302,9 +309,7 @@ void CalcTIltAxis::DoIt(MrcStackM &preprojs, AlignParam* pAlignParam, std::vecto
     for(int z=0; z<stack->Z(); z++)
     {
         Radon(z);
-
         FFT1d();
-
         cudaMemcpy(CmpPlanes[z], CmpPlane, tBytes, cudaMemcpyDefault);
     }
     float fTiltAxis = findTiltAxis();
@@ -331,7 +336,8 @@ void CalcTIltAxis::DoIt(MrcStackM &preprojs, AlignParam* pAlignParam, std::vecto
     cudaFree(CmpPlane);
 }
 
-void CalcTIltAxis::CLsetup(float angRange, int num)  //分配了RotAngles和CmpPlanes的内存，要记得释放掉
+void CalcTIltAxis::CLsetup(float angRange, int num)  //分配了RotAngles和CmpPlanes的内存，要记得释放掉 -
+// Allocated memory for RotAngles and CmpPlanes, remember to release it
 {
     int ZeroTilt = GetFrameIdxFromTilt(stack->Z(), angles, 0.0f);
     float fTiltAxis = param->rotate[ZeroTilt];  
@@ -370,7 +376,7 @@ void CalcTIltAxis::CLsetup(float angRange, int num)  //分配了RotAngles和CmpP
 void CalcTIltAxis::calcComRegion()
 {
     int ZeroTilt = GetFrameIdxFromTilt(stack->Z(), angles, 0.0f);
-    float fShift[2] = {0.0f};  //记录图像平移信息
+    float fShift[2] = {0.0f};  //记录图像平移信息 - Record image translation information
     fShift[0] = param->shiftX[ZeroTilt];
     fShift[1] = param->shiftY[ZeroTilt];
 
@@ -390,14 +396,14 @@ void CalcTIltAxis::calcComRegion()
 
 void CalcTIltAxis::Radon(int z)
 {
-    float fShift[2] = {0.0f};  //平移参数
+    float fShift[2] = {0.0f};  //平移参数 - translation parameters
     fShift[0] = param->shiftX[z];
     fShift[1] = param->shiftY[z];
     // printf("Radon时的平移参数:%f,%f\n", fShift[0], fShift[1]);
     float fTilt = angles[z];  //倾斜角
     float fcos = (float)cos(fTilt * D2R);
 
-    float *h_proj, *d_proj;   //获取图像
+    float *h_proj, *d_proj;   //获取图像 - get image
     int iPixels = stack->X() * stack->Y();
     size_t tBytes= sizeof(float) * iPixels;
     h_proj = new float[iPixels];
@@ -463,13 +469,13 @@ float CalcTIltAxis::findTiltAxis()
 {
     int LineMax = 0;
     float fScore = 0.0f;
-    float* fScores = new float[NumLines];  //记录每个角度的得分
+    float* fScores = new float[NumLines];  //记录每个角度的得分 - record the score of each angle
     // printf("Scores of potential tilt axes.\n");
 
 	for(int i=0; i<NumLines; i++)
     {	//FillLineSet(i);	
-        fScores[i] = CalcScore(i);  //计算每个可能的角度的得分
-        if(fScore < fScores[i])   //找到得分最大的角度
+        fScores[i] = CalcScore(i);  //计算每个可能的角度的得分 - calculate the score for each possible angle
+        if(fScore < fScores[i])   //找到得分最大的角度 - find the angle with the highest score
         {	fScore = fScores[i];
             LineMax = i;
         }
@@ -492,8 +498,8 @@ float CalcTIltAxis::CalcScore(int i)
     float m_fCCSum = 0.0f;
     for(int z=0; z<stack->Z(); z++)
     {
-        cufftComplex* gCmpLines = CmpPlanes[z];   //获取第z张图像的所有line
-        cudaMemcpy(gCmpLine, gCmpLines + i * CmpLineSize, tBytes, cudaMemcpyDefault);   //获取第z张图的第i个角度line
+        cufftComplex* gCmpLines = CmpPlanes[z];   //获取第z张图像的所有line - get all lines of the z-th image
+        cudaMemcpy(gCmpLine, gCmpLines + i * CmpLineSize, tBytes, cudaMemcpyDefault);   //获取第z张图的第i个角度line - get the i-th angle line of the z-th image
         fftSum(gCmpSum, gCmpLine, 1.0f, 1.0f, gCmpSum, CmpLineSize);
     }
 
@@ -529,14 +535,14 @@ float CalcTIltAxis::GCC1d(cufftComplex* gCmpRef, cufftComplex* gCmpLine)
 	int iShmBytes = sizeof(float) * 2 * aBlockDim.x;
 	//----------------------------------------------
 	int iBlocks = aGridDim.x;
-	size_t tBytes = sizeof(float) * iBlocks;  //两倍的线程块个数
+	size_t tBytes = sizeof(float) * iBlocks;  //两倍的线程块个数 - twice the number of thread blocks
 	float *gfCC = 0L, *gfStd = 0L;
 	cudaMalloc(&gfCC, tBytes);
 	cudaMalloc(&gfStd, tBytes);
 	//-------------------------
     GConv<<<aGridDim, aBlockDim, iShmBytes>>>
 	(gCmpRef, gCmpLine, CmpLineSize, 10, gfCC, gfStd);
-	iWarps = CalcWarps(iBlocks, 32);  //对iblocks个数进行归约求和
+	iWarps = CalcWarps(iBlocks, 32);  //对iblocks个数进行归约求和 - Reduce and sum the number of iblocks
 	aBlockDim.x = iWarps * 32;
 	aGridDim.x = 1;
 	iShmBytes = sizeof(float) * aBlockDim.x * 2;

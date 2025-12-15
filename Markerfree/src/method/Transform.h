@@ -24,7 +24,8 @@ class Transform
     AlignParam* param;
     std::vector<float> angles;
     CorrTomoStack* corrstack;
-    float* pshiftX;  //用于存储每一个循环得到的位移参数，随后加到总的位移参数上
+    float* pshiftX;  //用于存储每一个循环得到的位移参数，随后加到总的位移参数上 -
+    //  Used to store the displacement parameters obtained in each loop, which are then added to the total displacement parameters
     float* pshiftY;
     int BinSize[2];
     float* m_corrprojs;  

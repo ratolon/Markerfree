@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/libutil.a CMakeFiles/util.dir/exception.cpp.o CMakeFiles/util.dir/qsort.cpp.o
-/usr/bin/ranlib ../../lib/libutil.a

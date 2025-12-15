@@ -237,7 +237,7 @@ void MrcStackM::ReadBlock(int start, int end, char axis, float *blockdata)
     int slcN = start;
     int thickness = end - start;
 
-    size_t slcsize = header.nx * header.ny * psize;  //一张切片的内存大小
+    size_t slcsize = header.nx * header.ny * psize;  //一张切片的内存大小 - Size of a memory slice
 
     switch (axis)
     {
@@ -276,19 +276,19 @@ void MrcStackM::ReadBlock(int start, int end, char axis, float *blockdata)
 
     case 'y':
     case 'Y':
-        bufsize = header.nz * header.nx * thickness;  //thickness是steplength
-        buf = new char[bufsize * psize];  //buf包含了整个要切的部分
+        bufsize = header.nz * header.nx * thickness;  //thickness是steplength - step length
+        buf = new char[bufsize * psize];  //buf包含了整个要切的部分 - buf contains the entire part to be cut
         for (slcN; slcN < end; slcN++)
         {
-            char *cur = buf + (slcN - start) * header.nz * header.nx * psize;  //将指针移动到buf的特定层起点
+            char *cur = buf + (slcN - start) * header.nz * header.nx * psize;  //将指针移动到buf的特定层起点 - Move the pointer to the starting point of a specific layer of buf
 
             for (int k = 0; k < header.nz; k++)
             {
                 MPI_File_seek(mpifile,
-                              glboffset + slcN * header.nx * psize + k * slcsize, //第k层的第slcn列
+                              glboffset + slcN * header.nx * psize + k * slcsize, //第k层的第slcn列 - The k-th layer of the slcn column
                               MPI_SEEK_SET);
                 MPI_File_read(mpifile, cur + k * header.nx * psize, header.nx * psize,
-                              MPI_CHAR, MPI_STATUS_IGNORE);   //读取这一列的数据赋给cur
+                              MPI_CHAR, MPI_STATUS_IGNORE);   //读取这一列的数据赋给cur - Read the data of this column and assign it to cur
             }
         }
         break;
@@ -328,7 +328,7 @@ void MrcStackM::ReadBlock(int start, int end, char axis, float *blockdata)
     // return bufsize;
 }
 
-bool MrcStackM::WriteHeader()  //函数中的mpifile原来是output
+bool MrcStackM::WriteHeader()  //函数中的mpifile原来是output - The mpifile in the function was originally output
 {
     MPI_File_seek(output, 0, MPI_SEEK_SET);
     int rc = MPI_File_write(output, &header, sizeof(MRCheader), MPI_CHAR,
@@ -342,7 +342,7 @@ bool MrcStackM::WriteHeader()  //函数中的mpifile原来是output
     return !rc;
 }
 
-void MrcStackM::WriteSlice(int slcN, float *slcdata)  //函数中的mpifile原来是output
+void MrcStackM::WriteSlice(int slcN, float *slcdata)  //函数中的mpifile原来是output - The mpifile in the function was originally output
 {
     int psize = sizeof(float);
     MPI_Offset offset = sizeof(MrcHeader) + header.next;
@@ -453,7 +453,7 @@ void MrcStackM::InitializeHeader(int width, int height, int z)
     
 }
 
-void MrcStackM::UpdateHeader(bool zero) //函数中的mpifile原来是output
+void MrcStackM::UpdateHeader(bool zero) //函数中的mpifile原来是output - The mpifile in the function was originally output
 {
     size_t pxsize = header.nx * header.ny;
     float *slcdata = new float[pxsize];

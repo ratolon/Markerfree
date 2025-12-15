@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/libransac.a CMakeFiles/ransac.dir/xform.cpp.o
-/usr/bin/ranlib ../../lib/libransac.a

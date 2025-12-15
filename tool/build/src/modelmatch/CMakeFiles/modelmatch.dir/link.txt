@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/libmodelmatch.a CMakeFiles/modelmatch.dir/4pcs.cpp.o CMakeFiles/modelmatch.dir/cpdestimator.cpp.o CMakeFiles/modelmatch.dir/ifgt.cpp.o CMakeFiles/modelmatch.dir/match_core.cpp.o CMakeFiles/modelmatch.dir/r4pestimator.cpp.o CMakeFiles/modelmatch.dir/searchtree.cpp.o
-/usr/bin/ranlib ../../lib/libmodelmatch.a

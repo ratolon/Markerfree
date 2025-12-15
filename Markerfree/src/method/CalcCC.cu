@@ -22,7 +22,7 @@ static __device__ float mGBilinear(float XY[2], int width, int height, float* in
 
 static __device__ float Grandomfill(float XY[2], int width, int height, float* inproj)
 {
-    int x = (int)fabsf(XY[0]);  //取绝对值的整数部分
+    int x = (int)fabsf(XY[0]);  //取绝对值的整数部分 - Take the integer part of the absolute value
 	int y = (int)fabsf(XY[1]);
 	// if(x >= gridDim.x) x = 2 * gridDim.x - x;
 	// if(y >= height) y = 2 * height - y;
@@ -91,6 +91,7 @@ __global__ void GSum1D(float* databuf)
     if (threadIdx.x == 0) databuf[0] = shared[0];
 }
 
+// Code inspired in AreTomo2 source
 __global__ void GConv(cufftComplex* gComp1, cufftComplex* gComp2, int iCmpY)
 {	
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -98,7 +99,7 @@ __global__ void GConv(cufftComplex* gComp1, cufftComplex* gComp2, int iCmpY)
 	int i = y * gridDim.x + blockIdx.x;
 	//---------------------------------
 	float fRe, fIm;
-	fRe = gComp1[i].x * gComp2[i].x + gComp1[i].y * gComp2[i].y;   //将gcomp1取共轭了
+	fRe = gComp1[i].x * gComp2[i].x + gComp1[i].y * gComp2[i].y;   //将gcomp1取共轭了 - gComp1 is conjugated
 	fIm = gComp1[i].x * gComp2[i].y - gComp1[i].y * gComp2[i].x;
 	//-----------------------------------------------------------
 	gComp2[i].x = fRe;
@@ -112,7 +113,7 @@ __global__ void GWiener(cufftComplex* gComp, float fBFactor, int iCmpY)
     int i = y * gridDim.x + blockIdx.x;
     //---------------------------------
 	if(y > (iCmpY / 2)) y -= iCmpY;
-	float fNx = 2.0f * (gridDim.x - 1);   //原始图像的长度尺寸
+	float fNx = 2.0f * (gridDim.x - 1);   //原始图像的长度尺寸 - Original image length size
     float fFilt = -2.0f * fBFactor /(fNx * fNx + iCmpY * iCmpY);
     fFilt = expf(fFilt * (blockIdx.x * blockIdx.x + y * y));
 	//------------------------------------------------------
@@ -141,7 +142,8 @@ __global__ void GNormalize(float* gfImg, int iPadX, int iSizeY, float fMean, flo
 	float fInt = gfImg[i];
 	if(fInt < (float)-1e10) return;
 	//-----------------------------
-	gfImg[i] = (fInt - fMean) / fStd;  //每个像素减去均值再除以标准差，经典的归一化操作
+	gfImg[i] = (fInt - fMean) / fStd;  //每个像素减去均值再除以标准差，经典的归一化操作 
+    // Each pixel minus the mean and then divided by the standard deviation, a classic normalization operation
 }
 
 __global__ void GStretchRandom(float* inproj, int padX, int height, float* Matrix, float* outproj, bool Randfill)
@@ -159,6 +161,7 @@ __global__ void GStretchRandom(float* inproj, int padX, int height, float* Matri
     XY[0] = buf + 0.5f * gridDim.x - 0.5f;
 
     if(XY[0]>=0 && XY[0]<gridDim.x - 1 && XY[1]>=0 && XY[1]<height - 1)  //对于变换后在范围内的坐标，直接赋值并退出即可
+    // For coordinates that are within the range after transformation, just assign and exit
     {
         outproj[i] = mGBilinear(XY, padX, height, inproj);
         return;
@@ -233,9 +236,9 @@ void CalcCC::SetSize(int* pBinSize)
 
 void CalcCC::DoIt(float* RefProj, float* fProj, float fRefTilt, float fTilt, float fTiltAxis)
 {
-	PadProj(RefProj, (float*)PadRefProj);  //相邻图像的pad和归一化
+	PadProj(RefProj, (float*)PadRefProj);  //相邻图像的pad和归一化 - Pad and normalize adjacent images
     mNormalize((float*)PadRefProj);
-    PadProj(fProj, (float*)PadfProj);   //该图像的pad，拉伸和归一化
+    PadProj(fProj, (float*)PadfProj);   //该图像的pad，拉伸和归一化 - Pad, stretch and normalize this image
 
     bool bPadded = true; bool randomfill = true;
     double dstretch = cos(D2R * fRefTilt) / cos(D2R * fTilt);
@@ -245,7 +248,7 @@ void CalcCC::DoIt(float* RefProj, float* fProj, float fRefTilt, float fTilt, flo
 
     float MaskCent[] = {BinSize[0] * 0.5f, BinSize[1] * 0.5f};
     float MaskSize[] = {BinSize[0] * 1.0f, BinSize[1] * 1.0f};
-    RoundEdge((float*)PadRefProj, PadSize, bPadded, 4, MaskCent, MaskSize);   //对两张图像运用圆形蒙版
+    RoundEdge((float*)PadRefProj, PadSize, bPadded, 4, MaskCent, MaskSize);   //对两张图像运用圆形蒙版 - Apply circular mask to both images
     RoundEdge((float*)stretchProj, PadSize, bPadded, 4, MaskCent, MaskSize);
 
     bool bNorm = true;
@@ -253,11 +256,11 @@ void CalcCC::DoIt(float* RefProj, float* fProj, float fRefTilt, float fTilt, flo
     m_fft.CreateForwardPlan(CmpSize);
     if(!m_fft.ForwardFFT((float*)PadRefProj, CmpSize, bNorm))
     {
-        printf("执行2D的PadRefProj的fft时失败");
+        printf("执行2D的PadRefProj的fft时失败 - Failed to perform 2D FFT of PadRefProj");
     }
     if(!m_fft.ForwardFFT((float*)stretchProj, CmpSize, bNorm))
     {
-        printf("执行2D的PadRefProj的fft时失败");
+        printf("执行2D的stretchProjProj的fft时失败 - Failed to perform 2D FFT of stretchProj");
     }
 
     int iPixels = (CmpSize[0]-1)*2 * CmpSize[1];
@@ -331,7 +334,7 @@ void CalcCC::Stretch(float* inproj, int* piSize, bool bPadded, float dStretch, f
     cudaMalloc(&GMatrix, sizeof(float) * 3);
     cudaMemcpy(GMatrix, Matrix, sizeof(float) * 3, cudaMemcpyDefault);
 
-    int width = bPadded ? (piSize[0] / 2 - 1) * 2 : piSize[0];  //图像的原始长度
+    int width = bPadded ? (piSize[0] / 2 - 1) * 2 : piSize[0];  //图像的原始长度 - Original image length
 	int height = piSize[1];
     dim3 aBlockDim(1, 512);
 	dim3 aGridDim(width, 1);
@@ -406,25 +409,27 @@ float CalcCC::FindPeak(float* CC)
 	if(Peak[1] < 1) Peak[1] = 1;
 	else if(Peak[1] > (height - 2)) Peak[1] = height - 2; 
 
-    int ic = Peak[1] * width + Peak[0];  //当前整数峰值点的位置
+    int ic = Peak[1] * width + Peak[0];  //当前整数峰值点的位置 - Current integer peak point position
 	int xp = ic + 1;
 	int xm = ic - 1;
 	int yp = ic + width;
-	int ym = ic - width;  //这个点的上下左右的点的位置
+	int ym = ic - width;  //这个点的上下左右的点的位置 - The position of the points above, below, left and right of this point
 	//--------------------
-	double a = (CC[xp] + CC[xm]) * 0.5f - CC[ic];  //ic处二阶导的一半
-	double b = (CC[xp] - CC[xm]) * 0.5f;  //ic处的一阶导
+	double a = (CC[xp] + CC[xm]) * 0.5f - CC[ic];  //ic处二阶导的一半 - Half of the second derivative at ic
+	double b = (CC[xp] - CC[xm]) * 0.5f;  //ic处的一阶导 - First derivative at ic
 	double c = (CC[yp] + CC[ym]) * 0.5f - CC[ic];
 	double d = (CC[yp] - CC[ym]) * 0.5f;
-	double dCentX = -b / (2 * a + 1e-30);  //一阶导除以二阶导，用于后续的牛顿法迭代找到一阶导为0的位置
+	double dCentX = -b / (2 * a + 1e-30);  //一阶导除以二阶导，用于后续的牛顿法迭代找到一阶导为0的位置 -
+    //  The first derivative divided by the second derivative, used for subsequent Newton's method iteration to find the position where the first derivative is 0
 	double dCentY = -d / (2 * c + 1e-30);
 	//-----------------------------------
-	if(fabs(dCentX) > 1) dCentX = 0;  //说明计算错误
+	if(fabs(dCentX) > 1) dCentX = 0;  //说明计算错误 - Indicates calculation error
 	if(fabs(dCentY) > 1) dCentY = 0;
 	fPeak[0] = (float)(Peak[0] + dCentX);
 	fPeak[1] = (float)(Peak[1] + dCentY);
 
-    fshiftX = fPeak[0] - width / 2;  //因为图像是经过中心化的，要减去图像的一半得到真实值
+    fshiftX = fPeak[0] - width / 2;  //因为图像是经过中心化的，要减去图像的一半得到真实值 
+    // - Since the image is centered, half of the image must be subtracted to obtain the true value
 	fshiftY = fPeak[1] - height / 2;
     return m_fPeakInt;
 }

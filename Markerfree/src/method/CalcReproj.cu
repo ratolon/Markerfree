@@ -22,15 +22,16 @@ static __device__ float mDIntProj(float* gfProj, float fX)
 	else return fVal;
 }
 
+// Code inspired in AreTomo2
 static __global__ void mGBackProj
 (float* gfSinogram, float* gfTiltAngles, float fProjAngle, int iStartIdx,
 	int iEndIdx, float* gfVol // xz slice
 )
 {	int iX = blockIdx.x * blockDim.x + threadIdx.x;
 	if(iX >= giVolSize[0]) return;
-	float fX = iX +0.5f - giVolSize[0] * 0.5f;   //fX,fZ为三维体xz切片的坐标
+	float fX = iX +0.5f - giVolSize[0] * 0.5f;   //fX,fZ为三维体xz切片的坐标 - fX,fZ are the coordinates of the xz slice of the 3D volume
 	float fZ = blockIdx.y + 0.5f - giVolSize[1] * 0.5f;
-	// float fX = iX - giVolSize[0] * 0.5f;   //fX,fZ为三维体xz切片的坐标
+	// float fX = iX - giVolSize[0] * 0.5f;   //fX,fZ为三维体xz切片的坐标 - fX,fZ are the coordinates of the xz slice of the 3D volume
 	// float fZ = blockIdx.y - giVolSize[1] * 0.5f;
 	//-------------------------------------------------
 	float fInt = 0.0f;
@@ -39,16 +40,16 @@ static __global__ void mGBackProj
 	int iEnd = giProjSize[0] - 1;
 	//-----------------------------------
 	for(int i=iStartIdx; i<=iEndIdx; i++)
-	{	float fW = cosf((fProjAngle - gfTiltAngles[i]) * s_fD2R);   //计算权重，角度相差越大，权重越小
+	{	float fW = cosf((fProjAngle - gfTiltAngles[i]) * s_fD2R);   //计算权重，角度相差越大，权重越小 - Calculate weight, the greater the angle difference, the smaller the weight
 		float fV = gfTiltAngles[i] * s_fD2R;
 		float fCos = cosf(fV);
 		float fSin = sinf(fV); 
 		//--------------------
-		fV = fX * fCos + fZ * fSin + fCentX;  //求出正弦图中的ρ
-		if(fV < 0 || fV > iEnd) continue;     //如果ρ超出正弦图范围则不进行计算
+		fV = fX * fCos + fZ * fSin + fCentX;  //求出正弦图中的ρ - Calculate ρ in the sinogram
+		if(fV < 0 || fV > iEnd) continue;     //如果ρ超出正弦图范围则不进行计算 - If ρ exceeds the range of the sinogram, do not calculate
 		//-------------------------------
-		float* gfProj = gfSinogram + i * giProjSize[0];   //找到正弦图中第i个角度的位置
-		fV = mDIntProj(gfProj, fV);   //取出正弦图中第i个角度，位置为ρ的像素值
+		float* gfProj = gfSinogram + i * giProjSize[0];   //找到正弦图中第i个角度的位置 - Find the position of the i-th angle in the sinogram
+		fV = mDIntProj(gfProj, fV);   //取出正弦图中第i个角度，位置为ρ的像素值 - Take out the pixel value of the sinogram at the i-th angle, position ρ
 		if(fV < (float)-1e20) continue;
 		//------------------------------------------------
 		// fV * fCos: distribute the projection intensity
@@ -75,9 +76,9 @@ static __global__ void mGForProj
 	//--------------
 	float fXp = blockIdx.x + 0.5f - gridDim.x * 0.5f;
 	// float fXp = blockIdx.x - gridDim.x * 0.5f;
-	float fTempX = fXp * fCos + giVolSize[0] * 0.5f;   //确定一组在射线上的点，作为起始点
+	float fTempX = fXp * fCos + giVolSize[0] * 0.5f;   //确定一组在射线上的点，作为起始点 - Determine a set of points on the ray as the starting point
 	float fTempZ = fXp * fSin + giVolSize[1] * 0.5f;
-	float fZStartp = -fXp * fSin / fCos - 0.5f * iRayLength;	//求出起始点在射线的哪个位置
+	float fZStartp = -fXp * fSin / fCos - 0.5f * iRayLength;	//求出起始点在射线的哪个位置 - Find out where the starting point is on the ray
 	//------------------------------------------------------
 	int i = 0;
 	int iEndX = giVolSize[0] - 1;
@@ -85,11 +86,11 @@ static __global__ void mGForProj
 	float fX = 0.0f, fZ = 0.0f, fV = 0.0f;
 	int iSegments = iRayLength / blockDim.y + 1;
 	for(i=0; i<iSegments; i++)
-	{	fZ = i * blockDim.y + threadIdx.y;	//fz表示射线上一个点
+	{	fZ = i * blockDim.y + threadIdx.y;	//fz表示射线上一个点 - fz represents a point on the ray
 		if(fZ >= iRayLength) continue;
 		//----------------------------
-		fZ = fZ + fZStartp;			//求出这一点和初始点的相对位置
-		fX = fTempX - fZ * fSin;	//求出对应的图像坐标
+		fZ = fZ + fZStartp;			//求出这一点和初始点的相对位置 - Find the relative position of this point and the starting point
+		fX = fTempX - fZ * fSin;	//求出对应的图像坐标 - Find the corresponding image coordinates
 		fZ = fTempZ + fZ * fCos;
 		//----------------------
 		if(fX >= 0 && fX < iEndX && fZ >= 0 && fZ < iEndZ)
@@ -113,11 +114,12 @@ static __global__ void mGForProj
 	}
 	//-------------
 	if(threadIdx.y != 0) return;
-	if(siCount[0] < 0.8f * iRayLength) 		//如果射线在图像内长度小于最大长度的0.8倍，则被放弃，重投影值设为负大值
+	if(siCount[0] < 0.8f * iRayLength) 		//如果射线在图像内长度小于最大长度的0.8倍，则被放弃，重投影值设为负大值 
+	// - If the length of the ray inside the image is less than 0.8 times the maximum length
 	{	gfReproj[blockIdx.x] = (float)-1e30;
 	}
 	else 
-	{	gfReproj[blockIdx.x] = sfSum[0] / siCount[0];	//结果归一化
+	{	gfReproj[blockIdx.x] = sfSum[0] / siCount[0];	//结果归一化 - Result normalization
 	}
 }
 
@@ -136,10 +138,10 @@ CalcReprojFBP::~CalcReprojFBP()
 
 void CalcReprojFBP::Clean()
 {
-	if(fSinogram != 0L) cudaFree(fSinogram);  //一张投影图像的xz切片，大小为x*z
-	if(TiltAngles != 0L) cudaFree(TiltAngles); //倾斜角数据，大小为z
-	if(gReproj != 0L) cudaFree(gReproj);      //重投影过程中使用的中间变量
-	if(fvol != 0L) cudaFree(fvol);           //重建三维体的xz切片，大小为x*thickness
+	if(fSinogram != 0L) cudaFree(fSinogram);  //一张投影图像的xz切片，大小为x*z - An xz slice of a projection image, size x*z
+	if(TiltAngles != 0L) cudaFree(TiltAngles); //倾斜角数据，大小为z - Tilt angle data, size z
+	if(gReproj != 0L) cudaFree(gReproj);      //重投影过程中使用的中间变量 - Intermediate variable used in the reprojection process
+	if(fvol != 0L) cudaFree(fvol);           //重建三维体的xz切片，大小为x*thickness - xz slice of the reconstructed 3D volume, size x*thickness
 	fSinogram = 0L;
 	TiltAngles = 0L;
 	gReproj = 0L;
@@ -172,7 +174,7 @@ void CalcReprojFBP::Setup(int* rprojsize, int ivolZ, int num, std::vector<float>
 	cudaMalloc(&gReproj, iBytes);
 	//------------------------------
 	iBytes = m_aiVolSize[0] * m_aiVolSize[1] * sizeof(float);
-	cudaMalloc(&fvol, iBytes);    //一张体的xz方向切片
+	cudaMalloc(&fvol, iBytes);    //一张体的xz方向切片 - An xz slice of the volume
 }
 
 void CalcReprojFBP::DoIt(float* corrprojs, bool* SkipProjs, int iProj, float* fReproj)
@@ -222,7 +224,7 @@ void CalcReprojFBP::FindProjRange(std::vector<float> angles, bool* SkipProjs)
 
         istart = i;
         break;
-    }//找到第一个符合要求的序号
+    }//找到第一个符合要求的序号 - Find the first serial number that meets the requirements
     int iend = -1;
     for(int i=istart; i<numprojs; i++)
 	{	if(SkipProjs[i]) continue;
@@ -235,7 +237,7 @@ void CalcReprojFBP::FindProjRange(std::vector<float> angles, bool* SkipProjs)
 		if(fStretch > RefStretch) continue;
 		//----------------------------------
 		iend = i;
-	}//找到最后一个符合要求的序号
+	}//找到最后一个符合要求的序号 - Find the last serial number that meets the requirements
 	// if((iend - istart) > 9) iend = istart + 9;
 	int nproj = nProj - 1;
 	// std::cout << "nProj:" << nproj << std::endl;
