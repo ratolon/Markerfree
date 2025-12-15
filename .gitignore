@@ -1,3 +1,6 @@
+# Ignore Markerfree artifacts
+buf.mrc
+
 # Ignore build directories (root and any nested build/)
 build/
 **/build/
