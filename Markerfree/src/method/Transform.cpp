@@ -89,7 +89,7 @@ float Transform::Measure()
 
         StretchAlign.DoIt(d_reproj, d_proj, RefTilt, fTilt, fTiltAxis);
         StretchAlign.getshift(pshiftX[z], pshiftY[z], binX, binY);
-        printf("第%4d张图应该位移%8.2f, %8.2f\n", z+1, pshiftX[z], pshiftY[z]);
+        printf("%4d images must be shifted %8.2f, %8.2f pixels\n", z+1, pshiftX[z], pshiftY[z]);
         fErr = (float)sqrt(pshiftX[z] * pshiftX[z] + pshiftY[z] * pshiftY[z]);
         if(fErr > fMaxErr) fMaxErr = fErr;
     }

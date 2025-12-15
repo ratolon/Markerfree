@@ -17,8 +17,8 @@ void SaveParam::SaveXf(bool inv)
 	if(param == 0L) return;
 	FILE* pFile = (FILE*)m_pvFile;
 	float afShift[] = {0.0f, 0.0f};
-	const float width = output->X();  // 替换为实际图像宽度
-	const float height = output->X(); // 替换为实际图像高度
+	const float width = output->X();  // 替换为实际图像宽度 - Replace with actual image width
+	const float height = output->X(); // 替换为实际图像高度 - Replace with actual image height
 	const float cx = width / 2.0f;
 	const float cy = height / 2.0f;
 

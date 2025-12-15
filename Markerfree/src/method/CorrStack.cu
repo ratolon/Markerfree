@@ -438,7 +438,8 @@ __global__ void GRWeight(cufftComplex* gCmpSinogram, int iCmpSize)
 	gCmpSinogram[i].y /= fN;
 	//----------------------
 	float fR = x / fN;
-	fR = 2 * fR * (0.55f + 0.45f * cosf(6.2831852f * fR));  //这里使用的公式和书上的不太一样，后续改改试试
+	fR = 2 * fR * (0.55f + 0.45f * cosf(6.2831852f * fR));  //这里使用的公式和书上的不太一样，后续改改试试 
+	// - The formula used here is a bit different from that in the book, try to change it later
     // fR = 2 * fR * (0.54f - 0.46f * cosf(6.2831852f * fR));
 	gCmpSinogram[i].x *= fR;
 	gCmpSinogram[i].y *= fR;

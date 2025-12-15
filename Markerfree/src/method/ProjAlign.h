@@ -57,7 +57,7 @@ class ProjAlign
         cufft2D m_fft;
         cufft2D in_fft;
         float* m_corrprojs;  
-        float* mGreproj;  //为pnp方法准备
+        float* mGreproj;  //为pnp方法准备 - Prepared for pnp method
         int BinSize[2];
         int PadBinSize[2];
         int CmpBinSize[2];

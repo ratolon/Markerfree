@@ -27,9 +27,9 @@ ProjAlign::~ProjAlign()
 
 void ProjAlign::Clean()
 {
-	if(m_corrprojs != 0L) cudaFree(m_corrprojs);	  //根据已有参数矫正图像部分，删除的时候也会释放m_corr内存
-    if(SkipProjs != 0L) delete[] SkipProjs;   //记录已经纠正过的单张投影，占内存很小
-    if(fReproj != 0L) cudaFree(fReproj);      //一张重投影，大小为x*y
+	if(m_corrprojs != 0L) cudaFree(m_corrprojs);	  //根据已有参数矫正图像部分，删除的时候也会释放m_corr内存 - Release m_corr memory when deleting according to existing parameters to correct the image part
+    if(SkipProjs != 0L) delete[] SkipProjs;   //记录已经纠正过的单张投影，占内存很小 - Records a single projection that has been corrected, occupies very little memory
+    if(fReproj != 0L) cudaFree(fReproj);      //一张重投影，大小为x*y - A reprojected image, size x*y
 	// if(mGreproj != 0L) cudaFree(mGreproj);
 	if(PadRef != 0L) cudaFree(PadRef);
 	if(PadImg != 0L) cudaFree(PadImg);
@@ -257,18 +257,18 @@ void ProjAlign::MeaAlignProj(int iproj)
 	bool bNorm = true;
     if(!m_fft.ForwardFFT(PadRef, CmpBinSize, !bNorm))
     {
-        printf("执行2D的PadRefProj的fft时失败");
+        printf("执行2D的PadRef的fft时失败 - Failed to perform 2D fft of PadRef\n");
     }
     if(!m_fft.ForwardFFT(PadImg, CmpBinSize, !bNorm))
     {
-        printf("执行2D的PadRefProj的fft时失败");
+        printf("执行2D的PadImg的fft时失败 - Failed to perform 2D fft of PadImg\n");
     }
 
 	cufftComplex* gRefCmp = (cufftComplex*)PadRef;
 	cufftComplex* gImgCmp = (cufftComplex*)PadImg;
 	int iPixels = PadBinSize[0] * PadBinSize[1];
     float* m_pfXcfImg = new float[iPixels];
-    projgetCC(gRefCmp, gImgCmp, 500, m_pfXcfImg);    //不是五百就是四百
+    projgetCC(gRefCmp, gImgCmp, 500, m_pfXcfImg);    //不是五百就是四百 - It's either 500 or 400
     float Peak = PAFindPeak(m_pfXcfImg);
 
     delete[] m_pfXcfImg;
@@ -281,7 +281,7 @@ void ProjAlign::GetCentral(float* pfImg, float* gfPadImg)
 {	
 	// int CentSize[] = {outX, outY};
 	size_t tBytes = sizeof(float) * CentSize[0];
-	int iX = (BinSize[0] - CentSize[0]) / 2;  //起始点
+	int iX = (BinSize[0] - CentSize[0]) / 2;  //起始点 - Starting point
 	int iY = (BinSize[1] - CentSize[1]) / 2;
 	int iOffset = iY * BinSize[0] + iX;
 	//-------------------------------------
@@ -365,7 +365,8 @@ float ProjAlign::PAFindPeak(float* m_pfXcfImg)
 	float m_afPeak[2] = {0.0f};
 	m_afPeak[0] = (float)(aiPeak[0] + dCentX);
 	m_afPeak[1] = (float)(aiPeak[1] + dCentY);
-	ishiftX = m_afPeak[0] - m_aiXcfSize[0] / 2;  //因为图像是经过中心化的，要减去图像的一半得到真实值
+	ishiftX = m_afPeak[0] - m_aiXcfSize[0] / 2;  //因为图像是经过中心化的，要减去图像的一半得到真实值 
+	// - Because the image is centered, you need to subtract half of the image to get the real value
 	ishiftY = m_afPeak[1] - m_aiXcfSize[1] / 2;
 	float m_fPeak =  (float)(a * dCentX * dCentX + b * dCentX
 			+ c * dCentY * dCentY + d * dCentY
@@ -424,7 +425,7 @@ void ProjAlign::setreproj()
 	int pxsize = BinSize[0] * BinSize[1];
 	size_t tybes = sizeof(float) * pxsize;
 	h_data = new float[pxsize];
-	printf("开始写入\n");
+	printf("开始写入 - Start writing\n");
 	// printf("测试输出值:%f\n", h_data[256]);
 	reproj.InitializeHeader(BinSize[0], BinSize[1], stack->Z());
 	reproj.SetSize(BinSize[0], BinSize[1], stack->Z());
@@ -475,7 +476,7 @@ void ProjAlign::FitRotCenterZ()
         dCos = cos(angles[i] * D2R);
         dA += (afRotCent[0] * dCos - afRotShift[0]) * dSin;   //afRotCent[0] * dCos和afRotShift[0]的值本该相等，不相等的原因是因为z轴有偏移
 		// dA += (afRotCent[0] - afRotShift[0] / dCos) * dSin;
-        dB += (dSin * dSin);       //？此处不明白dA,dB是在求什么
+        dB += (dSin * dSin);       //？此处不明白dA,dB是在求什么 - ? It is not clear what dA and dB are asking for here
     }
 	float fOldZ = m_fZ0;
 	m_fZ0 = (float)(dA / (dB + 1e-30));
@@ -565,10 +566,14 @@ void ProjAlign::GetRotationCenter(float* pfCenter)
     float afS0[2] = {0.0f};
     //以图像中心为原点的话，位移多少就是中心偏移了多少，在correct图像的时候就是先绕着原中心旋转再位移的，所以下面就是先旋转，看看这个点被转到什么位置了
     //因为转完后图像y轴和倾斜轴平行，所以只需要对x方向的位移进行缩放
+	// If the image center is taken as the origin, the displacement is the center offset. 
+	// When correcting the image, it is rotated around the original center and then displaced. 
+	// Therefore, the following is to rotate first and see where this point is rotated to.
+	// Since after the rotation, the image y-axis is parallel to the tilt axis, only the displacement in the x-direction needs to be scaled.
     afS0[0] = param->shiftX[iZeroTilt];  
     afS0[1] = param->shiftY[iZeroTilt];
     RotShift(afS0, -param->rotate[iZeroTilt], afS0);
     pfCenter[0] = afS0[0] / cos(angles[iZeroTilt] * D2R);
     pfCenter[1] = afS0[1];
-	pfCenter[2] = m_fZ0;     //z轴偏移量
+	pfCenter[2] = m_fZ0;     //z轴偏移量 - z-axis offset
 }
