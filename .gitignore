@@ -1,0 +1,88 @@
+# Ignore build directories (root and any nested build/)
+build/
+**/build/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+Makefile
+build.ninja
+rules.ninja
+*.ninja
+
+# Common build artefacts
+*.o
+*.obj
+*.lo
+*.slo
+*.lai
+*.la
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+a.out
+*.out
+
+# Linker and coverage
+*.gcda
+*.gcno
+*.prof
+
+# Static libs and pkg-config
+*.pc
+*.pdb
+
+# Binaries and output directories (keep conservative: don't ignore src/bin unless desired)
+**/bin/
+**/lib/
+
+# IDE and editor config
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln
+*.vcxproj*
+*.cproject
+*.project
+
+# Editors and swap files
+*~
+*.swp
+*.swo
+.#*
+*.kate-swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python (if present)
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+env/
+.env
+
+# Test / coverage / caches
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.pytest_cache/
+.nyc_output/
+
+# Misc
+*.log
+*.tmp
+*.cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
