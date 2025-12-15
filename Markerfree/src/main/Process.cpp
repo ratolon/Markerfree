@@ -17,7 +17,7 @@
 #include <random>
 #include <unistd.h>
 #include <limits.h>
-#include <libgen.h> // 提供 dirname() 函数
+#include <libgen.h> // Provides dirname() function
 
 Process::Process()
 {
@@ -41,18 +41,20 @@ void Process::DoIt(options &opt, SysInfo &info)
     int status = ReadStack(opt, info);
 
     // 🔥 如果读取失败，必须立即所有 rank 全部退出
+    // If reading fails, all ranks must exit immediately
     if (status != 0)
     {
         if (info.id == 0)
             printf("[Abort] DoIt() stopped due to input file loading failure.\n");
 
         return; // ❗❗立刻退出，不再跑下面所有步骤
+        // ❗❗ Exit immediately, do not run all the following steps
     }
 
     Geometry geo;
-    geo.offset = opt.offset;  //表示倾斜角偏移
-    geo.pitch_angle = opt.pitch_angle;   //表示倾斜轴偏移角
-    geo.zshift = opt.zshift;  //表示z轴偏移   
+    geo.offset = opt.offset;  //表示倾斜角偏移 - Offset of tilt axis
+    geo.pitch_angle = opt.pitch_angle;   //表示倾斜轴偏移角 - Pitch angle of tilt axis
+    geo.zshift = opt.zshift;  //表示z轴偏移 - Z shift
     ReadAngles(p_angles, opt.angle);
 
     bool angle_ok = ReadAngles(p_angles, opt.angle);
@@ -65,24 +67,24 @@ void Process::DoIt(options &opt, SysInfo &info)
         return;
     }
 
-    mPreprocess();  //图像预处理
+    mPreprocess();  //图像预处理 - Preprocess images
 
     if(opt.AlignZ != 0)
     {
-        SetParam();   //初始化参数
+        SetParam();   //初始化参数 - Initialize alignment parameters
 
-        mCoarseAlign(geo);  //图像粗对齐
+        mCoarseAlign(geo);  //图像粗对齐 - Coarse alignment
 
-        mProjAlign(geo, opt);  //图像投影匹配对齐
+        mProjAlign(geo, opt);  //图像投影匹配对齐 - Projection matching alignment
     }
 
-    CorrectStack(opt);  //图像矫正和保存
+    CorrectStack(opt);  //图像矫正和保存 - Correct and save images
 
     gettimeofday(&end_time, nullptr);
     long seconds = end_time.tv_sec - start_time.tv_sec;
     long microseconds = end_time.tv_usec - start_time.tv_usec;
     double elapsed_time = seconds + microseconds / 1e6;
-    if(opt.AlignZ != 0) CollectParam(opt, elapsed_time);  //收集对齐相关参数和时间
+    if(opt.AlignZ != 0) CollectParam(opt, elapsed_time);  //收集对齐相关参数和时间 - Collect alignment parameters and time
     std::cout << "Elapsed time: " << elapsed_time << " seconds" << std::endl;
 
     preprojs.Close();
@@ -126,9 +128,9 @@ void Process::DoIt(options &opt, SysInfo &info)
 
 int Process::ReadStack(options &opt, SysInfo &info)
 {
-    int status = 0; // 0 表示正常，负值表示错误
+    int status = 0; // 0 表示正常，负值表示错误 - 0 means normal, negative means error
 
-    // Rank 0 负责读文件
+    // Rank 0 负责读文件 - Rank 0 is responsible for reading the file
     if (info.id == 0)
     {
         if (!projs.ReadFile(opt.input))
@@ -138,7 +140,7 @@ int Process::ReadStack(options &opt, SysInfo &info)
         }
     }
 
-    // 广播文件读取状态给所有 rank
+    // 广播文件读取状态给所有 rank - Broadcast file reading status to all ranks
     MPI_Bcast(&status, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     if (status != 0)
@@ -156,7 +158,7 @@ int Process::ReadStack(options &opt, SysInfo &info)
     preprojs.InitializeHeader(projs.X(), projs.Y(), projs.Z());
     preprojs.SetSize(projs.X(), projs.Y(), projs.Z());
 
-    // 构造 buf.mrc 的绝对路径
+    // 构造 buf.mrc 的绝对路径 - Construct the absolute path of buf.mrc
     char absolutePath[PATH_MAX];
     realpath(opt.output, absolutePath);
     std::string dir = dirname(absolutePath);
@@ -173,9 +175,9 @@ int Process::ReadStack(options &opt, SysInfo &info)
 std::string Process::extractParentFolder(const char* filename)
 {
     std::string pathString(filename);
-    size_t found = pathString.find_last_of("/\\"); // 查找最后一个路径分隔符
+    size_t found = pathString.find_last_of("/\\"); // 查找最后一个路径分隔符 - Find the last path separator
     if (found != std::string::npos) {
-        // 截取上一级文件夹名称
+        // 截取上一级文件夹名称 - Extract the parent folder name
         return pathString.substr(0, found);
     }
     return "";
@@ -210,7 +212,7 @@ void Process::SetParam()
     param->shiftY = new float[nz];
     param->rotate = new float[nz];
 
-    // 初始化数组为 0
+    // 初始化数组为 0 - Initialize arrays to 0
     for (int i = 0; i < nz; i++) {
         param->shiftX[i] = 0.0f;
         param->shiftY[i] = 0.0f;
@@ -233,7 +235,7 @@ void Process::mPreprocess()
     }
 }
 
-void Process::mCoarseAlign(Geometry &geo)   //这一过程只修改了参数param
+void Process::mCoarseAlign(Geometry &geo)   //这一过程只修改了参数param - This process only modifies the parameters in param
 {  
     if(geo.pitch_angle == 0)
     {
@@ -346,13 +348,8 @@ void Process::CorrectStack(options &opt)
     binprojs.WriteHeader();
     corr.DoIt();
 
-    binprojs.UpdateHeader();  //binprojs.UpdateHeader里的参数不改也行，因为随机填充的时候不会执行if中的语句
-    // std::string bufFilePath = extractParentFolder(opt.output) + "/buf.mrc";
-    // if (std::remove(bufFilePath.c_str()) == 0) {
-    //     std::cout << "File " << bufFilePath.c_str() << " successfully deleted." << std::endl;
-    // } else {
-    //     std::cerr << "Error deleting file " << bufFilePath.c_str() << std::endl;
-    // }
+    binprojs.UpdateHeader();
+
     char absolutePath[PATH_MAX];
 
     if (realpath(opt.output, absolutePath))
@@ -417,6 +414,7 @@ void Process::CollectParam(options &opt, double time)
     }
     saveparam.angles = angles;
     saveparam.GetParam(1, opt.Savemode, inv);  //4表示一开始输入的图像缩小了四倍，在收集位移数据的时候要乘4
+    // 4 means the input images were downsampled by a factor of 4 at the beginning, so multiply the shift data by 4 when collecting
 }
 
 void TranslateAngleToCoefficients(const std::vector<float> &angles,
